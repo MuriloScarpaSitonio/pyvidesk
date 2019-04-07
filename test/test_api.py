@@ -1,6 +1,6 @@
 import unittest
 
-from pyvidesk.api import Api
+from pyvidesk.apis.api import Api
 
 class TestApi(unittest.TestCase):
 

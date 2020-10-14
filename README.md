@@ -4,7 +4,7 @@ Biblioteca Python para uso da API do Movidesk.
 
 ## Informações Gerais
 
-Atualmente, esta biblioteca suporta apenas consultas as entidades [Tickets](https://atendimento.movidesk.com/kb/pt-br/article/256/movidesk-ticket-api), [Persons](https://atendimento.movidesk.com/kb/pt-br/article/189/movidesk-person-api) e [Services](https://atendimento.movidesk.com/kb/pt-br/article/7440/api-servicos) por meio da API do Movidesk.
+Atualmente, esta biblioteca suporta requisições GET, POST, PATCH e DELETE as entidades [Tickets](https://atendimento.movidesk.com/kb/pt-br/article/256/movidesk-ticket-api), [Persons](https://atendimento.movidesk.com/kb/pt-br/article/189/movidesk-person-api) e [Services](https://atendimento.movidesk.com/kb/pt-br/article/7440/api-servicos) por meio da API do Movidesk.
 
 ## Uso
 

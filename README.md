@@ -12,22 +12,29 @@ Atualmente, esta biblioteca suporta apenas consultas as entidades [Tickets](http
 from pyvidesk import Pyvidesk
 
 persons = Pyvidesk(token="Meu_token_secreto").persons
-person_id_1 = persons.get_by_id(1)
-# person_id_1 contém o JSON retornado pelo Movidesk.
+person = persons.get_by_id("2222")
+print(person)
+print(person.id)
+print(person.isActive)
+print(person.businessName)
+# <Model for Person(id=2222)>
+# 2222
+# True
+# Murilo Scarpa Sitonio
 ```
 
-Você pode usara lógica acima para consultar qualquer propriedade da entidade e ainda setar as opções da query:
+Você pode usar a lógica acima para consultar qualquer propriedade da entidade e ainda setar as opções da query:
 
 ```python
 from pyvidesk import Pyvidesk
 
 persons = Pyvidesk(token="Meu_token_secreto").persons
 my_query = persons.get_by_isActive(True, select=("id", "businessName"), top=10)
-# my_query contém uma lista, apenas com as informações "id" e "businessName", 
+# my_query contém uma lista de Models, apenas com as informações "id" e "businessName", 
 # das 10 primeiras pessoas ativas.
 ```
 
-Para consultas mais complexas recomenda-se o uso do método `query` e das propriedades específicas da entidade, obtidas por meio de `get_properties`:
+Para consultas mais complexas recomenda-se o uso da classe `Query`, obtida por meio do método `query()`, e das propriedades específicas da entidade, obtidas por meio de `get_properties()`:
 
 ```python
 from datetime import date, timedelta
@@ -70,7 +77,7 @@ data = my_query.first()
 
 ```python
 from pyvidesk import Pyvidesk
-from pyvidesk.utils import AnyAny
+from pyvidesk.lambdas import AnyAny
 
 # AnyAny implementa dois operadores lambdas concatenados.
 
@@ -104,17 +111,71 @@ print(my_query.as_url())
 # &$filter=customFieldValues/any(x: x/items/any(y: y/customFieldItem eq 'Equipamento XYZ'))
 # &$expand=customFieldValues($expand=items($select=customFieldItem);$select=items)&$orderby=id desc
 
-for data in my_query:
-    print(data)
+for ticket in my_query:
+    print(ticket)
 
-# {'id': 1003, 'customFieldValues': [{'items': [{'customFieldItem': 'Falha em equipamento'}]}, 
-# {'items': [{'customFieldItem': 'Equipamento XYZ'}]}]}
-# {'id': 1002, 'customFieldValues': [{'items': [{'customFieldItem': 'Falha em equipamento'}]}, 
-# {'items': [{'customFieldItem': 'Equipamento XYZ'}]}]}
-# {'id': 1001, 'customFieldValues': [{'items': [{'customFieldItem': 'Falha em equipamento'}]}, 
-# {'items': [{'customFieldItem': 'Equipamento XYZ'}]}]}
-# {'id': 987, 'customFieldValues': [{'items': [{'customFieldItem': 'Falha em equipamento'}]}, 
-# {'items': [{'customFieldItem': 'Equipamento XYZ'}]}]}
-# {'id': 984, 'customFieldValues': [{'items': [{'customFieldItem': 'Falha em equipamento'}]}, 
-# {'items': [{'customFieldItem': 'Equipamento XYZ'}]}]}
+# <Model for Ticket(id=1003)>
+# <Model for Ticket(id=1002)>
+# <Model for Ticket(id=1001)>
+# <Model for Ticket(id=987)>
+# <Model for Ticket(id=984)>
+```
+
+## Classe Model
+
+Todas as consultas ao servidor retornam um objeto da classe `Model`. Este objeto pode ser manipulado e as alterações podem ser enviadas ao servidor com o método `save()`:
+
+```python
+from pyvidesk import Pyvidesk
+
+tickets = Pyvidesk(token="Meu_token_secreto").tickets
+ticket = tickets.get_by_id(1)
+today = date.today()
+for action in ticket.actions:
+    for appointment in action.timeAppointments:
+        appointment.date = today
+
+ticket.save()  # Assim, uma requisição PATCH é enviada ao servidor.
+```
+
+É possível excluir um modelo do servidor com o método `delete()`:
+
+```python
+from pyvidesk import Pyvidesk
+
+persons = Pyvidesk(token="Meu_token_secreto").persons
+person = persons.get_by_id("1")
+person.delete()  # Assim, uma requisição DELETE é enviada ao servidor.
+```
+
+Para criação de modelos, deve-se usar a classe `EmptyModel` e o método `create()`:
+
+```python
+from pyvidesk import Pyvidesk
+
+ticket = Pyvidesk(token="Meu_token_secreto").tickets.get_empty_model()
+print(ticket)
+# <EmptyModel for Ticket()>
+
+ticket.subject = "Assunto"
+ticket.type = 1
+ticket.serviceFirstLevelId = 190853
+ticket.createdBy.id = "2263751"
+ticket.clients = [{"id": "917910092"}]
+ticket.actions = [{"description": "Descrição", "type": 1}]
+ticket.ownerTeam = "Administradores"
+ticket.owner.id = "2222"
+
+ticket.create()  # Assim, uma requisição POST é enviada ao servidor.
+```
+
+Também há a opção de se trabalhar diretamente com o `JSON` enviado pelo servidor, chamando o método `raw()`:
+
+```python
+from pyvidesk import Pyvidesk
+
+persons = Pyvidesk(token="Meu_token_secreto").persons
+person = persons.get_by_id("2222", select="businessName")
+print(person.raw())
+# {'businessName': 'Murilo Scarpa Sitonio'}
 ```

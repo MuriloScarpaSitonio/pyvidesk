@@ -1,8 +1,9 @@
 from datetime import date
 import unittest
 
-from pyvidesk.tickets import Tickets
 from pyvidesk.lambdas import All, AllAll, AllAny, Any, AnyAll, AnyAny
+from pyvidesk.tickets import Tickets
+from pyvidesk.query import Q
 from tests.config import TOKEN
 
 
@@ -63,10 +64,27 @@ class TestQuery(unittest.TestCase):
         result = self.tickets.query().filter(my_filter).as_url()
         self.assertEqual(result, expected)
 
+    def test_query_filter_with_or_operator(self):
+        my_filter = Q(self.properties["clients"].id == 55) | Q(
+            self.properties["clients"].organization.id == 55
+        )
+        expected = (
+            self.tickets.api.base_url
+            + "&$filter=(clients/id eq '55' or clients/organization/id eq '55')"
+        )
+        result = self.tickets.query().filter(my_filter).as_url()
+        self.assertEqual(result, expected)
+
     def test_query_array_property_contains(self):
         my_filter = self.properties["tags"].has("My tag")
         expected = self.tickets.api.base_url + "&$filter=tags/any(x: x eq 'My tag')"
         result = self.tickets.query().filter(my_filter).as_url()
+        self.assertEqual(result, expected)
+
+    def test_query_array_property_contains_negation_operator(self):
+        my_filter = self.properties["tags"].has("My tag")
+        expected = self.tickets.api.base_url + "&$filter=not tags/any(x: x eq 'My tag')"
+        result = self.tickets.query().filter(~Q(my_filter)).as_url()
         self.assertEqual(result, expected)
 
     def test_query_subproperty_with_filter(self):

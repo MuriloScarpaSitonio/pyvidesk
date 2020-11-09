@@ -334,6 +334,33 @@ class Query:
         return self.entity.api.get(**query_params)
 
 
+class Q:
+    """
+    Class que encapsula filtros como objetos de maneira que possam ser combinados logicamente (usando
+    `&`, `|` ou `~`).
+
+    Inspirado na classe django.db.models.Q (https://github.com/django/django/blob/master/django/db/models/query_utils.py)
+    """
+
+    def __init__(self, query_filter):
+        self.filter = query_filter
+
+    def _combine(self, other, condition):
+        if not isinstance(other, Q):
+            raise TypeError(other)
+
+        return f"({self.filter} {condition} {other.filter})"
+
+    def __or__(self, other):
+        return self._combine(other, condition="or")
+
+    def __and__(self, other):
+        return self._combine(other, condition="and")
+
+    def __invert__(self):
+        return f"not {self.filter}"
+
+
 def _get_complex_type_expansion(select, inner):
     """
     Funcao que obtem a string que representa uma expansão complexa (interna, concatenada...),

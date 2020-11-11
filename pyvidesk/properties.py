@@ -203,6 +203,9 @@ class ArrayProperty(StringProperty):
             return f"{p1}/any(x: x/{p2}/any(y: y eq {self.escape_value(value)}))"
         return f"{self.full_name}/any(x: x eq {self.escape_value(value)})"
 
+    # __contains__ precisa retornar um valor booleano, logo, não podemos aplicar a lógica acima
+    # para alterar o operador 'in'
+
 
 class BooleanProperty(PropertyBase):
     """

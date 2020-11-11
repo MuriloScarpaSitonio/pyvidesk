@@ -34,7 +34,7 @@ my_query = persons.get_by_isActive(True, select=("id", "businessName"), top=10)
 # das 10 primeiras pessoas ativas.
 ```
 
-Para consultas mais complexas recomenda-se o uso da classe `Query`, obtida por meio do método `query()`, e das propriedades específicas da entidade, obtidas por meio de `get_properties()`:
+Para consultas mais complexas recomenda-se o uso da classe `Query`, obtida por meio da propriedade `query`, e das propriedades específicas da entidade, obtidas por meio de `get_properties()`:
 
 ```python
 from datetime import date, timedelta
@@ -44,8 +44,9 @@ from pyvidesk import Pyvidesk
 tickets = Pyvidesk(token="Meu_token_secreto").tickets
 tickets_properties = tickets.get_properties()
 my_query = (
-    tickets.query()
-    .filter(tickets_properties["owner"].businessName == "Murilo Scarpa Sitonio")
+    tickets.query.filter(
+        tickets_properties["owner"].businessName == "Murilo Scarpa Sitonio"
+    )
     .filter(tickets_properties["createdDate"] >= date.today() - timedelta(days=1))
     .expand(tickets_properties["clients"])
     .select(tickets_properties["id"])
@@ -85,8 +86,7 @@ tickets = Pyvidesk(token="Meu_token_secreto").tickets
 tickets_properties = tickets.get_properties()
 
 my_query = (
-    tickets.query()
-    .filter(
+    tickets.query.filter(
         AnyAny(
             tickets_properties["customFieldValues"].items.customFieldItem
             == "Equipamento XYZ"
@@ -119,6 +119,75 @@ for ticket in my_query:
 # <Model for Ticket(id=1001)>
 # <Model for Ticket(id=987)>
 # <Model for Ticket(id=984)>
+```
+
+### Exemplos de consulta mais complexa - múltiplas expansões
+
+```python
+my_query = (
+    tickets.query.filter(tickets_properties["id"] >= 1000)
+    .expand(
+        tickets_properties["actions"],
+        inner={
+            "expand": tickets_properties["actions"].timeAppointments,
+            "inner": {
+                "expand": tickets_properties["actions"].timeAppointments.createdBy,
+                "select": tickets_properties["actions"].timeAppointments.createdBy.id,
+            },
+            "select": tickets_properties["actions"].timeAppointments.activity,
+        },
+        select=tickets_properties["actions"].id,
+    )
+    .select(tickets_properties["id"])
+    .order_by(tickets_properties["id"].desc())
+    .top(5)
+    .skip(200)
+)
+
+print(my_query.as_url())
+# https://api.movidesk.com/public/v1/tickets?token=Meu_token_secreto&$top=5&$skip=200&$select=id
+# &$filter=id ge 1000
+# &$expand=actions($expand=timeAppointments($expand=createdBy($select=id);$select=activity);$select=id)
+# &$orderby=id desc
+
+for ticket in my_query:
+    print(ticket)
+
+# <Model for Ticket(id=4067)>
+# <Model for Ticket(id=4066)>
+# <Model for Ticket(id=4065)>
+# <Model for Ticket(id=4064)>
+# <Model for Ticket(id=4063)>
+```
+
+Para manipulação com operadores lógicos, deve-se usar a class `Q`, inspirada em [django.db.models.Q](https://github.com/django/django/blob/master/django/db/models/query_utils.py).
+
+### Exemplos de consulta mais complexa - operador lógico OR
+
+Para operações `or`, utilize `|`.
+
+```python
+from pyvidesk.query import Q
+
+my_query = tickets.query.filter(
+    Q(tickets_properties["clients"].id == 55)
+    | Q(tickets_properties["clients"].organization.id == 66)
+)
+
+print(my_query.as_url())
+# https://api.movidesk.com/public/v1/tickets?token=Meu_token_secreto
+# &$filter=(clients/id eq '55' or clients/organization/id eq '66')
+```
+
+### Exemplos de consulta mais complexa - operador lógico NOT e método `has`
+
+Para operações `not`, utilize `~`. E para checar se uma string está contida num array, utilize o método `has`.
+
+```python
+my_query = tickets.query.filter(~Q(tickets_properties["tags"].has("My tag")))
+
+print(my_query.as_url())
+# https://api.movidesk.com/public/v1/tickets?token=Meu_token_secreto&$filter=not tags/any(x: x eq 'My tag')
 ```
 
 ## Classe Model

@@ -148,9 +148,9 @@ class Query:
         na construção da consulta.
 
         Args:
-            values (pyvidesk.properties.*, str, tuple or list): Valores que serão inseridos no
+            values (pyvidesk.properties.*, ou str): Valores que serão inseridos no
                 parâmetro '&select' da consulta.
-                Recomenda-se o uso das propriedades de self.entity, no entanto, outros tipos também
+                Recomenda-se o uso das propriedades de self.entity, no entanto, strings também
                 devem funcionar (precisa de mais testes).
 
         Returs:
@@ -361,82 +361,47 @@ class Q:
         return f"not {self.filter}"
 
 
-def _get_complex_type_expansion(select, inner):
-    """
-    Funcao que obtem a string que representa uma expansão complexa (interna, concatenada...),
-    já com os valores da query substituídos.
-    """
-    pattern = _get_complex_type_expansion_pattern(select=select, inner=inner)
-    if pattern:
-        if inner:
-            if isinstance(inner, dict):
-                pattern[pattern.index("prop_inner_expand")] = get_property_name(
-                    inner["expand"]
-                )
-                if "select" in inner:
-                    pattern[pattern.index("prop_inner_select")] = get_property_name(
-                        inner["select"]
-                    )
-            else:
-                pattern[pattern.index("prop_inner_expand")] = get_property_name(inner)
-        if select:
-            pattern[pattern.index("prop_outer_select")] = get_property_name(select)
-
-    return "".join(pattern)
-
-
-def _get_complex_type_expansion_pattern(select, inner):
+def _get_complex_type_expansion(select, inner, is_inner_expansion=False):
     """
     Funcao que obtem uma string que representa o padrão de uma uma expansão complexa
     (interna, concatenada...).
     """
-    patterns = {
-        "inner_expand_inner_select_outer_select": [
-            "($expand=",
-            "prop_inner_expand",
-            "($select=",
-            "prop_inner_select",
-            ")",
-            ";$select=",
-            "prop_outer_select",
-            ")",
-        ],
-        "inner_expand_inner_select": [
-            "($expand=",
-            "prop_inner_expand",
-            "($select=",
-            "prop_inner_select",
-            "))",
-        ],
-        "inner_expand_outer_select": [
-            "($expand=",
-            "prop_inner_expand",
-            ";$select=",
-            "prop_outer_select",
-            ")",
-        ],
-        "inner_expand": [
-            "($expand=",
-            "prop_inner_expand",
-            ")",
-        ],
-        "outer_select": [
-            "($select=",
-            "prop_outer_select",
-            ")",
-        ],
-        "": [],
-    }
-
     pattern = ""
     if inner:
-        pattern += "inner_expand"
-        if isinstance(inner, dict) and "select" in inner:
-            pattern += "_inner_select"
+        if isinstance(inner, dict):
+            pattern += "$expand=" + get_property_name(inner.get("expand"))
+            if "inner" in inner:
+                inner_pattern = _get_complex_type_expansion(
+                    select=inner["inner"].get("select"),
+                    inner=inner["inner"].get("expand"),
+                    is_inner_expansion=True,
+                )
+                if inner_pattern:
+                    pattern += inner_pattern
+                if "select" in inner:
+                    pattern = (
+                        "".join(pattern.split("))"))
+                        + ");$select="
+                        + get_property_name(inner.get("select"))
+                        + ")"
+                    )
+
+            else:
+                if "select" in inner:
+                    pattern += (
+                        "($select=" + get_property_name(inner.get("select")) + ")"
+                    )
+        else:
+            pattern += "$expand=" + get_property_name(inner)
     if select:
         if pattern:
-            pattern += "_outer_select"
+            if is_inner_expansion:
+                pattern += "($select=" + get_property_name(select) + ")"
+            else:
+                pattern += ";$select=" + get_property_name(select)
         else:
-            pattern += "outer_select"
+            pattern += "$select=" + get_property_name(select)
 
-    return patterns[pattern]
+    if pattern:
+        return f"({pattern})"
+    return pattern

@@ -24,6 +24,7 @@ from .exceptions import (
     PyvideskWrongKwargError,
 )
 from .model import EmptyModel
+from .properties import ComplexProperty
 from .query import Query
 from .utils import get_property_name
 
@@ -38,6 +39,10 @@ class Entity:
         """
         base_url = self.BASE_URL + f"?token={token}"
         self.api = Api(base_url=base_url)
+
+    @property
+    def query(self):
+        return Query(entity=self)
 
     def get_properties(self, **kwargs):  # pylint: disable=unused-argument
         """
@@ -74,7 +79,7 @@ class Entity:
             """
             for property_name, property_obj in properties.items():
                 print(escape_code + f"Propriedade: {property_name}")
-                print(escape_code + f"Tipo: {property_obj.alias.__name__}")
+                print(escape_code + f"Tipo: {property_obj.alias}")
                 print(
                     escape_code + f"Descrição: {property_obj.get_description()}",
                 )
@@ -95,9 +100,6 @@ class Entity:
             "\n\n----------------------------------------------------------------------"
             "--------------------------------------------------------------------------\n\n"
         )
-
-    def query(self):
-        return Query(entity=self)
 
     def get_empty_model(self):
         return EmptyModel(entity=self)

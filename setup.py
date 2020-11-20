@@ -11,7 +11,7 @@ setup(
     description="Movidesk API client for Python",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/MuriloScarpaSitonio/pyvidesk",
+    url="https://github.com/movidesk/pyvidesk",
     packages=find_packages(),
     license="MIT",
     classifiers=[

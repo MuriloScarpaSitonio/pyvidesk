@@ -10,7 +10,7 @@ Exemplo de uso:
 >>> tickets = Tickets(token="my_token")
 >>> tickets_properties = tickets.get_properties()
 >>> print(tickets_properties["createdDate"] >= my_date)
-... createdDate ge 2020-01-01T20:00:00
+... createdDate ge 2020-01-01T20:00:00Z
 >>> print(tickets_properties["createdDate"].get_description())
 ... Data de abertura do ticket. A data informada deve estar no formato UTC*.
 ... *Caso não for informada, será preenchida com a data atual.
@@ -244,7 +244,13 @@ class DatetimeProperty(PropertyBase):
         if isinstance(value, str):
             value = dateutil_parse(value)
 
-        return value.isoformat()
+        return value.isoformat() + "Z"
+        # O Z no final vem da prórpria ISO-8601 e do padrão de datas pelo UTC do Movidesk:
+        # "If the time is in UTC, add a 'Z' directly after the time without a space."
+        # Sem o "Z", recebemos o seguinte erro:
+        # Message: The query specified in the URI is not valid. The DateTimeOffset
+        # text should be in format 'yyyy-mm-ddThh:mm:ss('.'s+)?(zzzzzz)?'
+        # and each field value is within valid range.
 
     def serialize(self, value):
         if isinstance(value, datetime.date):

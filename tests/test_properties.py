@@ -6,8 +6,8 @@ from tests.config import TOKEN
 # TODO: expand this module
 
 
-class TestQuery(unittest.TestCase):
-    """Classe que testa a classe Query utilizando a entity Tickets"""
+class TestProperties(unittest.TestCase):
+    """Classe que testa as classes de properties.py"""
 
     properties = Tickets(token=TOKEN).get_properties()
 

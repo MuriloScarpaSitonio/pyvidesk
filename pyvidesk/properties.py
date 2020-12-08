@@ -178,6 +178,9 @@ class StringProperty(PropertyBase):
             return "null"
         return f"'{value}'"
 
+    def contains(self, value):
+        return f"contains({self.full_name}, {self.escape_value(value)})"
+
 
 class ArrayProperty(StringProperty):
     """

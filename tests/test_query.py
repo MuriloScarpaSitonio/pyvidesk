@@ -18,6 +18,80 @@ class TestQuery(unittest.TestCase):
         result = self.tickets.query.as_url()
         self.assertEqual(result, expected)
 
+    def test_order_by(self):
+        expected = self.tickets.api.base_url + "&$select=id&$orderby=id"
+        result = self.tickets.query.select("id").order_by("id").as_url()
+        self.assertEqual(result, expected)
+
+    def test_order_by_property(self):
+        expected = self.tickets.api.base_url + "&$select=id&$orderby=id"
+        result = (
+            self.tickets.query.select("id").order_by(self.properties["id"]).as_url()
+        )
+        self.assertEqual(result, expected)
+
+    def test_order_by_property_asc(self):
+        expected = self.tickets.api.base_url + "&$select=id&$orderby=id asc"
+        result = (
+            self.tickets.query.select("id")
+            .order_by(self.properties["id"].asc())
+            .as_url()
+        )
+        self.assertEqual(result, expected)
+
+    def test_order_by_property_desc(self):
+        expected = self.tickets.api.base_url + "&$select=id&$orderby=id desc"
+        result = (
+            self.tickets.query.select("id")
+            .order_by(self.properties["id"].desc())
+            .as_url()
+        )
+        self.assertEqual(result, expected)
+
+    def test_order_by_property_and_string(self):
+        expected = self.tickets.api.base_url + "&$select=id&$orderby=createdDate,id"
+        result = (
+            self.tickets.query.select("id")
+            .order_by(self.properties["createdDate"], "id")
+            .as_url()
+        )
+        self.assertEqual(result, expected)
+
+    def test_order_by_property_desc_and_string(self):
+        expected = (
+            self.tickets.api.base_url + "&$select=id&$orderby=createdDate desc,id"
+        )
+        result = (
+            self.tickets.query.select("id")
+            .order_by(self.properties["createdDate"].desc(), "id")
+            .as_url()
+        )
+        self.assertEqual(result, expected)
+
+    def test_order_by_property_desc_and_property(self):
+        expected = (
+            self.tickets.api.base_url + "&$select=id&$orderby=createdDate desc,id"
+        )
+        result = (
+            self.tickets.query.select("id")
+            .order_by(self.properties["createdDate"].desc(), self.properties["id"])
+            .as_url()
+        )
+        self.assertEqual(result, expected)
+
+    def test_order_by_property_desc_and_property_asc(self):
+        expected = (
+            self.tickets.api.base_url + "&$select=id&$orderby=createdDate desc,id asc"
+        )
+        result = (
+            self.tickets.query.select("id")
+            .order_by(
+                self.properties["createdDate"].desc(), self.properties["id"].asc()
+            )
+            .as_url()
+        )
+        self.assertEqual(result, expected)
+
     def test_query_with_filter_eq_operator(self):
         my_filter = self.properties["id"] == "2"
         expected = self.tickets.api.base_url + "&id=2"
@@ -29,7 +103,7 @@ class TestQuery(unittest.TestCase):
         my_filter = self.properties["createdDate"] > today
         expected = (
             self.tickets.api.base_url
-            + f"&$filter=createdDate gt {today.strftime('%Y-%m-%d')}"
+            + f"&$filter=createdDate gt {today.strftime('%Y-%m-%d')}Z"
         )
         result = self.tickets.query.filter(my_filter).as_url()
         self.assertEqual(result, expected)
@@ -39,7 +113,7 @@ class TestQuery(unittest.TestCase):
         my_filter = self.properties["createdDate"] >= today
         expected = (
             self.tickets.api.base_url
-            + f"&$filter=createdDate ge {today.strftime('%Y-%m-%d')}"
+            + f"&$filter=createdDate ge {today.strftime('%Y-%m-%d')}Z"
         )
         result = self.tickets.query.filter(my_filter).as_url()
         self.assertEqual(result, expected)
@@ -49,7 +123,7 @@ class TestQuery(unittest.TestCase):
         my_filter = self.properties["createdDate"] < today
         expected = (
             self.tickets.api.base_url
-            + f"&$filter=createdDate lt {today.strftime('%Y-%m-%d')}"
+            + f"&$filter=createdDate lt {today.strftime('%Y-%m-%d')}Z"
         )
         result = self.tickets.query.filter(my_filter).as_url()
         self.assertEqual(result, expected)
@@ -59,7 +133,7 @@ class TestQuery(unittest.TestCase):
         my_filter = self.properties["createdDate"] <= today
         expected = (
             self.tickets.api.base_url
-            + f"&$filter=createdDate le {today.strftime('%Y-%m-%d')}"
+            + f"&$filter=createdDate le {today.strftime('%Y-%m-%d')}Z"
         )
         result = self.tickets.query.filter(my_filter).as_url()
         self.assertEqual(result, expected)

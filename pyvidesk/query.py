@@ -30,6 +30,7 @@ Exemplo de uso:
 """
 
 from .model import Model
+from .properties import ComplexProperty, PropertyBase
 from .utils import get_property_name
 
 
@@ -255,6 +256,7 @@ class Query:
         Returs:
             new_query (pyvidesk.query.Query): Uma instância desta classe.
         """
+        values = properties_to_strings(values)
         new_query = self._new_query()
         option = new_query._get_or_create_option("$orderby")
         option.extend(values)
@@ -405,3 +407,21 @@ def _get_complex_type_expansion(select, inner, is_inner_expansion=False):
     if pattern:
         return f"({pattern})"
     return pattern
+
+
+def properties_to_strings(values):
+    """
+    Função que transforma propriedas em strings.
+    Útil para o padrão de ordenação de order_by: na ausência de 'desc()' ou 'asc()', devemos
+    passar apenas a string para o servidor e deixar que ele defina o padrão de ordenação.
+
+    Args:
+        values (tuple): Valores passados a order_by
+
+    Returns:
+        (list): Lista de strings.
+    """
+    return [
+        value.full_name if isinstance(value, (PropertyBase, ComplexProperty)) else value
+        for value in values
+    ]

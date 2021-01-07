@@ -47,8 +47,11 @@ def _nested_lambda_operator_base(string, lambda_operator1, lambda_operator2):
     """
     properties, operator, *value = string.split()
     value = " ".join(value)
-    p1, p2, p3 = properties.split("/")
-    return f"{p1}/{lambda_operator1}(x: x/{p2}/{lambda_operator2}(y: y/{p3} {operator} {value}))"
+    p1, p2, *p3 = properties.split("/")
+    return (
+        f"{p1}/{lambda_operator1}(x: x/{p2}/{lambda_operator2}"
+        f"(y: y/{'/'.join(p3)} {operator} {value}))"
+    )
 
 
 def AnyAny(string):

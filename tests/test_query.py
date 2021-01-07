@@ -1,7 +1,6 @@
 from datetime import date
 import unittest
 
-from pyvidesk.lambdas import All, AllAll, AllAny, Any, AnyAll, AnyAny
 from pyvidesk.tickets import Tickets
 from pyvidesk.query import Q
 from tests.config import TOKEN
@@ -167,121 +166,10 @@ class TestQuery(unittest.TestCase):
         result = self.tickets.query.filter(my_filter).as_url()
         self.assertEqual(result, expected)
 
-    def test_query_subproperty_with_filter_and_lambda_any(self):
-        my_filter = Any(self.properties["clients"].id == "2")
-        expected = self.tickets.api.base_url + "&$filter=clients/any(x: x/id eq '2')"
-        result = self.tickets.query.filter(my_filter).as_url()
-        self.assertEqual(result, expected)
-
-    def test_query_subproperty_with_filter_and_lambda_any_and_multi_splitabble_value(
-        self,
-    ):
-        """Teste da funcao Any quando o valor tem espacos"""
-        my_filter = Any(
-            self.properties["clients"].businessName == "Nome grande para teste"
-        )
-        expected = (
-            self.tickets.api.base_url
-            + "&$filter=clients/any(x: x/businessName eq 'Nome grande para teste')"
-        )
-        result = self.tickets.query.filter(my_filter).as_url()
-        self.assertEqual(result, expected)
-
-    def test_query_subsubproperty_with_filter_and_lambda_any(self):
-        my_filter = Any(self.properties["clients"].organization.id == "2")
-        expected = (
-            self.tickets.api.base_url
-            + "&$filter=clients/any(x: x/organization/id eq '2')"
-        )
-        result = self.tickets.query.filter(my_filter).as_url()
-        self.assertEqual(result, expected)
-
-    def test_query_subproperty_with_filter_and_lambda_all(self):
-        my_filter = All(self.properties["clients"].id == "2")
-        expected = self.tickets.api.base_url + "&$filter=clients/all(x: x/id eq '2')"
-        result = self.tickets.query.filter(my_filter).as_url()
-        self.assertEqual(result, expected)
-
-    def test_query_subsubproperty_with_filter_and_lambda_all(self):
-        my_filter = All(self.properties["clients"].organization.id == "2")
-        expected = (
-            self.tickets.api.base_url
-            + "&$filter=clients/all(x: x/organization/id eq '2')"
-        )
-        result = self.tickets.query.filter(my_filter).as_url()
-        self.assertEqual(result, expected)
-
     def test_query_subproperty_that_is_array(self):
         my_filter = self.properties["actions"].tags.has("My tag")
         expected = self.tickets.api.base_url + (
             "&$filter=actions/any(x: x/tags/any(y: y eq 'My tag'))"
-        )
-        result = self.tickets.query.filter(my_filter).as_url()
-        self.assertEqual(result, expected)
-
-    def test_query_subsubproperty_that_is_property_with_anyany(self):
-        """Teste usando dois operadores lambda: any e any"""
-        my_filter = AnyAny(
-            self.properties["customFieldValues"].items.customFieldItem
-            == "MGSSUSTR6-06R"
-        )
-        expected = self.tickets.api.base_url + (
-            "&$filter=customFieldValues/any(x: x/items/any"
-            "(y: y/customFieldItem eq 'MGSSUSTR6-06R'))"
-        )
-        result = self.tickets.query.filter(my_filter).as_url()
-        self.assertEqual(result, expected)
-
-    def test_query_subsubproperty_that_is_property_with_anyany_and_multi_splitabble_value(
-        self,
-    ):
-        """Teste da funcao any e any quando o valor tem espacos"""
-        my_filter = AnyAny(
-            self.properties["customFieldValues"].items.customFieldItem
-            == "MGSSUSTR6-06R e MGSSUSTR6-06P"
-        )
-        expected = self.tickets.api.base_url + (
-            "&$filter=customFieldValues/any(x: x/items/any"
-            "(y: y/customFieldItem eq 'MGSSUSTR6-06R e MGSSUSTR6-06P'))"
-        )
-        result = self.tickets.query.filter(my_filter).as_url()
-        self.assertEqual(result, expected)
-
-    def test_query_subsubproperty_that_is_property_with_anyall(self):
-        """Teste usando dois operadores lambda: any e all"""
-        my_filter = AnyAll(
-            self.properties["customFieldValues"].items.customFieldItem
-            == "MGSSUSTR6-06R"
-        )
-        expected = self.tickets.api.base_url + (
-            "&$filter=customFieldValues/any(x: x/items/all"
-            "(y: y/customFieldItem eq 'MGSSUSTR6-06R'))"
-        )
-        result = self.tickets.query.filter(my_filter).as_url()
-        self.assertEqual(result, expected)
-
-    def test_query_subsubproperty_that_is_property_with_allany(self):
-        """Teste usando dois operadores lambda: all e any"""
-        my_filter = AllAny(
-            self.properties["customFieldValues"].items.customFieldItem
-            == "MGSSUSTR6-06R"
-        )
-        expected = self.tickets.api.base_url + (
-            "&$filter=customFieldValues/all(x: x/items/any"
-            "(y: y/customFieldItem eq 'MGSSUSTR6-06R'))"
-        )
-        result = self.tickets.query.filter(my_filter).as_url()
-        self.assertEqual(result, expected)
-
-    def test_query_subsubproperty_that_is_property_with_allall(self):
-        """Teste usando dois operadores lambda: all e all"""
-        my_filter = AllAll(
-            self.properties["customFieldValues"].items.customFieldItem
-            == "MGSSUSTR6-06R"
-        )
-        expected = self.tickets.api.base_url + (
-            "&$filter=customFieldValues/all(x: x/items/all"
-            "(y: y/customFieldItem eq 'MGSSUSTR6-06R'))"
         )
         result = self.tickets.query.filter(my_filter).as_url()
         self.assertEqual(result, expected)
